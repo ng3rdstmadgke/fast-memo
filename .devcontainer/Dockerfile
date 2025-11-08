@@ -83,7 +83,7 @@ RUN wget https://github.com/alexei-led/spotinfo/releases/download/1.0.7/spotinfo
 RUN curl -LsSf https://astral.sh/uv/install.sh \
   | env UV_INSTALL_DIR=/usr/local/bin UV_NO_MODIFY_PATH=1 sh
 
-ENV UV_PROJECT_ENVIRONMENT="/workspaces/devcontainer-template/.venv"
+ENV UV_PROJECT_ENVIRONMENT="/workspaces/fast-memo/.venv"
 
 # Node.js インストール
 # https://nodesource.com/products/distributions
