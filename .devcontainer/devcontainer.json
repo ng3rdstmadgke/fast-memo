@@ -12,6 +12,8 @@
    // コンテナの環境変数設定
   "containerEnv": {
       "PROJECT_NAME": "fast-memo",
+      // devcontainerのID
+      "DEVCONTAINER_ID": "${devcontainerId}",
       // ホスト側のプロジェクトディレクトリ
       "HOST_DIR": "${localWorkspaceFolder}",
       // コンテナ側のプロジェクトディレクトリ

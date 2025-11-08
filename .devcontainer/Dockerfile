@@ -27,6 +27,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
       groff \
       procps \
       python3.12 \
+      default-mysql-client \
       postgresql-client-16 \
       redis-tools
 
@@ -78,6 +79,10 @@ RUN curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases
 RUN wget https://github.com/alexei-led/spotinfo/releases/download/1.0.7/spotinfo_linux_amd64 && \
     chmod 755 spotinfo_linux_amd64 && \
     mv spotinfo_linux_amd64 /usr/local/bin/spotinfo
+
+# rabbitmqadmin インストール
+RUN wget -O /usr/local/bin/rabbitmqadmin https://github.com/rabbitmq/rabbitmqadmin-ng/releases/download/v2.9.0/rabbitmqadmin-2.9.0-x86_64-unknown-linux-gnu && \
+    chmod +x /usr/local/bin/rabbitmqadmin
 
 # uv をグローバルにインストール
 RUN curl -LsSf https://astral.sh/uv/install.sh \
