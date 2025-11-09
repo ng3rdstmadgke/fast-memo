@@ -1,7 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/header";
+import { listUsers } from "@/actions/sample";
 
-export default function Home() {
+export default async function Home() {
+  let users = await listUsers();
   return (
     <>
       {/* Header */}
@@ -11,6 +13,7 @@ export default function Home() {
       <div className="flex flex-1 items-center justify-center bg-gray-50">
         <div className="text-center space-y-6">
           <div className="space-y-2">
+            <div>{users.length}</div>
             <h2 className="text-3xl font-semibold text-gray-900">
               Fast Note へようこそ
             </h2>
