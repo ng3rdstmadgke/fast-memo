@@ -98,10 +98,10 @@ import { defineConfig, env } from "prisma/config";
 ```bash
 # マイグレーションファイルの作成
 #   --name: マイグレーション名
-npx prisma migrate dev --name init --create-only
+pnpm prisma migrate dev --name init --create-only
 
 # マイグレーションの適用
-npx prisma migrate deploy
+pnpm prisma migrate deploy
 ```
 
 # DBのseedデータ投入
