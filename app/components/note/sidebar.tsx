@@ -5,16 +5,11 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Plus, Search } from "lucide-react";
 import { useState } from "react";
-
-interface Note {
-  id: string;
-  title: string;
-  date: string;
-  tags: string[];
-}
+import { ListNotesSchema, ListTagsSchema } from "@/actions/main";
 
 interface SidebarProps {
-  notes?: Note[];
+  notes?: ListNotesSchema[];
+  tags?: ListTagsSchema[];
   selectedNoteId?: string;
   onNoteSelect?: (noteId: string) => void;
   onNewNote?: () => void;
@@ -22,6 +17,7 @@ interface SidebarProps {
 
 export function Sidebar({
   notes = [],
+  tags = [],
   selectedNoteId,
   onNoteSelect,
   onNewNote,
@@ -30,9 +26,9 @@ export function Sidebar({
   const [selectedTag, setSelectedTag] = useState<string>("All");
 
   // タグの抽出
-  const allTags = Array.from(
-    new Set(notes.flatMap((note) => note.tags))
-  ).sort();
+  console.log("Tags in Sidebar:", tags);
+  const allTags = tags.map(tag => tag.name).sort();
+  console.log("allTags:", allTags);
 
   // フィルタリング
   const filteredNotes = notes.filter((note) => {
@@ -132,10 +128,10 @@ export function Sidebar({
                     <div className="flex flex-wrap gap-1 mt-1">
                       {note.tags.map((tag) => (
                         <span
-                          key={tag}
+                          key={tag.id}
                           className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs"
                         >
-                          {tag}
+                          {tag.name}
                         </span>
                       ))}
                     </div>

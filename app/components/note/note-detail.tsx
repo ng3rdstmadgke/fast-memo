@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Trash2 } from "lucide-react";
 import { useState } from "react";
+import { ListNotesSchema, GetNoteByIdSchema } from "@/actions/main";
 
 interface Note {
   id: string;
@@ -15,29 +16,25 @@ interface Note {
 }
 
 interface NoteDetailProps {
-  note?: Note | null;
+  note?: GetNoteByIdSchema;
   onUpdate?: (note: Note) => void;
   onDelete?: (noteId: string) => void;
 }
 
 export function NoteDetail({ note, onUpdate, onDelete }: NoteDetailProps) {
-  const [title, setTitle] = useState(note?.title || "");
-  const [content, setContent] = useState(note?.content || "");
-  const [tags, setTags] = useState(note?.tags.join(", ") || "");
-
   // Auto-save when values change (debounced in real implementation)
   const handleUpdate = () => {
-    if (note && onUpdate) {
-      onUpdate({
-        ...note,
-        title,
-        content,
-        tags: tags
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean),
-      });
-    }
+    // if (note && onUpdate) {
+    //   onUpdate({
+    //     ...note,
+    //     title,
+    //     content,
+    //     tags: tags
+    //       .split(",")
+    //       .map((t) => t.trim())
+    //       .filter(Boolean),
+    //   });
+    // }
   };
 
   if (!note) {
@@ -62,8 +59,8 @@ export function NoteDetail({ note, onUpdate, onDelete }: NoteDetailProps) {
             type="text"
             placeholder="タイトル"
             className="flex-1 text-lg font-medium border-gray-200 focus:border-gray-300"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            value={note.title}
+            onChange={(e) => console.log(e.target.value)} // TODO: setTitle
             onBlur={handleUpdate}
           />
           <Button
@@ -81,8 +78,8 @@ export function NoteDetail({ note, onUpdate, onDelete }: NoteDetailProps) {
           type="text"
           placeholder="タグ (カンマ区切り)"
           className="border-gray-200 focus:border-gray-300"
-          value={tags}
-          onChange={(e) => setTags(e.target.value)}
+          value={note.tags.map(tag => tag.name).join(", ")}
+          onChange={(e) => console.log(e.target.value)} // TODO: setTags
           onBlur={handleUpdate}
         />
 
@@ -90,8 +87,8 @@ export function NoteDetail({ note, onUpdate, onDelete }: NoteDetailProps) {
         <Textarea
           placeholder="ノートの内容を入力..."
           className="flex-1 resize-none border-gray-200 focus:border-gray-300 min-h-0"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
+          value={note.content}
+          onChange={(e) => console.log(e.target.value)} // TODO: setContent
           onBlur={handleUpdate}
         />
 

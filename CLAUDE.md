@@ -29,12 +29,13 @@
 
 ### バックエンド
 
-| 技術 | 用途 |
-|------|------|
-| Next.js Server Actions | サーバーサイド処理（APIサーバーレス構成） |
-| PostgreSQL | メインデータベース |
-| Keycloak | アイデンティティプロバイダー（IdP） |
-| NextAuth.js (Auth.js) | OIDC認証クライアント |
+| 技術 | バージョン | 用途 |
+|------|-----------|------|
+| Next.js Server Actions | - | サーバーサイド処理（APIサーバーレス構成） |
+| PostgreSQL | 15+ | メインデータベース |
+| Prisma ORM | 6.x | ORMとデータベースマイグレーション |
+| Keycloak | - | アイデンティティプロバイダー（IdP） |
+| NextAuth.js (Auth.js) | - | OIDC認証クライアント |
 
 ### 開発ツール
 
@@ -467,14 +468,42 @@ KEYCLOAK_ISSUER="http://localhost:8080/realms/fast-note"
 openssl rand -base64 32
 ```
 
-6. **データベースマイグレーション**
+6. **Prismaクライアントの生成**
 
 ```bash
-# マイグレーションツール導入後に実行
+cd app
+pnpm prisma generate
+```
+
+このプロジェクトでは、Prismaクライアントの出力先を `lib/generated/prisma` にカスタマイズしています。
+
+**カスタマイズの理由:**
+- AWS EKS/Vercelなどのデプロイ環境では `node_modules` へのアクセスが制限される場合がある
+- 生成コードと手書きコードの明確な分離
+- Prisma公式が将来的にカスタム出力パスを必須化する予定のため、先行して対応
+
+**型定義のインポート方法:**
+```typescript
+// Prismaで生成されたモデル型をインポート
+import { Note, Tag, User } from '@/lib/generated/prisma/client';
+import { Prisma } from '@/lib/generated/prisma/client';
+
+// 使用例: リレーションを含む型定義
+type NoteWithTags = Prisma.NoteGetPayload<{
+  include: { tags: true }
+}>;
+```
+
+**注意**: `pnpm install` 実行時に自動的に `prisma generate` が実行されるため、通常は手動実行は不要です。
+
+7. **データベースマイグレーション**
+
+```bash
+cd app
 pnpm db:migrate
 ```
 
-7. **開発サーバーの起動**
+8. **開発サーバーの起動**
 
 ```bash
 cd app
