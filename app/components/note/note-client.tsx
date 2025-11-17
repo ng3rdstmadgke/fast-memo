@@ -3,7 +3,16 @@
 import { Sidebar } from "@/components/note/sidebar";
 import { NoteDetail } from "@/components/note/note-detail";
 import { useEffect, useState } from "react";
-import { ListNotesSchema, ListTagsSchema, GetNoteByIdSchema, getNoteById, listNotes, listTags } from "@/actions/main";
+import {
+  ListNotesSchema,
+  ListTagsSchema,
+  GetNoteByIdSchema,
+  getNoteById,
+  listNotes,
+  listTags,
+  createNote,
+  deleteNote,
+} from "@/actions/main";
 
 type Note = {
   id: string;
@@ -19,55 +28,20 @@ export default function NotesPage({notesFromServer, tagsFromServer}: {notesFromS
     notesFromServer[0]?.id
   );
   const [selectedNoteDetail, setSelectedNoteDetail] = useState<GetNoteByIdSchema | null>(null); 
-  const [isLoading, setIsLoading] = useState(false);
 
   // サイドバーで選択されたノートIDが変わったときに詳細を取得
   useEffect(() => {
-    if (!selectedNoteId) return;
+    if (!selectedNoteId) {
+      setSelectedNoteDetail(null);
+      return
+    }
     const fetchNoteDetail = async () => {
-      setIsLoading(true);
       const detail = await getNoteById(selectedNoteId);
       setSelectedNoteDetail(detail);
       //console.log("Fetching detail:", selectedNoteDetail);
-      setIsLoading(false);
     };
     fetchNoteDetail();
-
   }, [selectedNoteId]);
-
-  // ノートの新規作成
-  const handleNewNote = () => {
-    const newNote = {
-      id: Date.now().toString(),
-      title: "",
-      content: "",
-      tags: [],
-      date: new Date().toLocaleDateString("ja-JP"),
-      createdAt: new Date().toISOString(),
-    };
-    setNotes([newNote, ...notes]);
-    setSelectedNoteId(newNote.id);
-  };
-
-  // ノートの更新
-  const handleUpdateNote = (note: Note ) => {
-    if (!selectedNoteDetail) return;
-    const updatedNote = {
-      ...selectedNoteDetail,
-      title: note.title ?? selectedNoteDetail.title,
-      // tags: tags ?? selectedNoteDetail.tags,
-      content: note.content ?? selectedNoteDetail.content,
-    };
-    setSelectedNoteDetail(updatedNote);
-  };
-
-  // ノートの削除
-  const handleDeleteNote = (noteId: string) => {
-    if (confirm("このノートを削除してもよろしいですか？")) {
-      setNotes(notes.filter((note) => note.id !== noteId));
-      setSelectedNoteId(notes[0]?.id);
-    }
-  };
 
   // サイドバーの情報の更新
   const refreshSidebar = async () => {
@@ -76,6 +50,23 @@ export default function NotesPage({notesFromServer, tagsFromServer}: {notesFromS
     const updatedTags = await listTags();
     setTags(updatedTags);
   }
+
+  // ノートの新規作成
+  const handleNewNote = async () => {
+    const {id} = await createNote()
+    setSelectedNoteId(id);
+    await refreshSidebar();
+  };
+
+  // ノートの削除
+  const handleDeleteNote = async (noteId: string) => {
+    if (confirm("このノートを削除してもよろしいですか？")) {
+      setSelectedNoteId(undefined);
+      await deleteNote(noteId);
+      await refreshSidebar();
+    }
+  };
+
 
   return (
     <>

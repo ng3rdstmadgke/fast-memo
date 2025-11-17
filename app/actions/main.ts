@@ -68,6 +68,37 @@ export async function getNoteById(noteId: string): Promise<GetNoteByIdSchema | n
   });
 }
 
+export async function createNote(): Promise<{id: string}> {
+  // TODO: ログイン機能実装後にユーザーIDを動的に取得する
+  const user = await prisma.user.findUnique({
+    where: { id: "keita.midorikawa"}
+  });
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  return await prisma.note.create({
+    data: {
+      userId: user.id,
+      title: "新しいノート",
+      content: "",
+    },
+  });
+}
+
+async function deleteOrphanTags(userId: string): Promise<void> {
+  // 孤立したタグの削除
+  await prisma.tag.deleteMany({
+    where: {
+      userId: userId,
+      notes: {
+        // notesに関連付けられていないタグを削除: https://www.prisma.io/docs/orm/prisma-client/queries/relation-queries#filter-on-absence-of--to-many-records
+        none: {}
+      }
+    }
+  })
+}
+
 export async function updateNote(noteId: string, title: string, tags: string, content: string): Promise<void> {
   // TODO: ログイン機能実装後にユーザーIDを動的に取得する
   const user = await prisma.user.findUnique({
@@ -105,13 +136,24 @@ export async function updateNote(noteId: string, title: string, tags: string, co
   })
 
   // 孤立したタグの削除
-  await prisma.tag.deleteMany({
-    where: {
-      userId: user.id,
-      notes: {
-        // notesに関連付けられていないタグを削除: https://www.prisma.io/docs/orm/prisma-client/queries/relation-queries#filter-on-absence-of--to-many-records
-        none: {}
-      }
-    }
-  })
+  await deleteOrphanTags(user.id);
+}
+
+export async function deleteNote(noteId: string): Promise<void> {
+  // TODO: ログイン機能実装後にユーザーIDを動的に取得する
+  const user = await prisma.user.findUnique({
+    where: { id: "keita.midorikawa"}
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  // https://www.prisma.io/docs/orm/prisma-client/queries/crud#delete
+  await prisma.note.delete({
+    where: { id: noteId, userId: user.id },
+  });
+
+  // 孤立したタグの削除
+  await deleteOrphanTags(user.id);
 }
