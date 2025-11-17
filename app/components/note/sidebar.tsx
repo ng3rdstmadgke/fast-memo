@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { ListNotesSchema, ListTagsSchema } from "@/actions/main";
 
@@ -24,6 +24,7 @@ export function Sidebar({
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("All");
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // タグの抽出
   const allTags = tags.map(tag => tag.name).sort();
@@ -37,17 +38,50 @@ export function Sidebar({
     return matchesSearch && matchesTag;
   });
 
-  return (
-    <div className="w-80 border-r border-gray-200 bg-gray-50 flex flex-col h-full">
-      <div className="p-4 space-y-3">
-        {/* New Note Button */}
+  if (isCollapsed) {
+    return (
+      <div className="w-12 border-r border-gray-200 bg-gray-50 flex flex-col h-full items-center py-4">
         <Button
-          className="w-full bg-gray-900 hover:bg-gray-800 text-white"
-          onClick={onNewNote}
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsCollapsed(false)}
+          className="mb-4"
         >
-          <Plus className="mr-2 h-4 w-4" />
-          新しいノート
+          <ChevronRight className="h-4 w-4" />
         </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onNewNote}
+          className="text-gray-700"
+        >
+          <Plus className="h-4 w-4" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-80 border-r border-gray-200 bg-gray-50 flex flex-col h-full relative">
+      <div className="p-4 space-y-3">
+        {/* Header with New Note Button and Collapse Button */}
+        <div className="flex items-center gap-2">
+          <Button
+            className="flex-1 bg-gray-900 hover:bg-gray-800 text-white"
+            onClick={onNewNote}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            新しいノート
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsCollapsed(true)}
+            className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        </div>
 
         {/* Search Bar */}
         <div className="relative">
