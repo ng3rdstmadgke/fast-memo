@@ -38,7 +38,6 @@ export default function NotesPage({notesFromServer, tagsFromServer}: {notesFromS
     const fetchNoteDetail = async () => {
       const detail = await getNoteById(selectedNoteId);
       setSelectedNoteDetail(detail);
-      //console.log("Fetching detail:", selectedNoteDetail);
     };
     fetchNoteDetail();
   }, [selectedNoteId]);

@@ -26,9 +26,7 @@ export function Sidebar({
   const [selectedTag, setSelectedTag] = useState<string>("All");
 
   // タグの抽出
-  console.log("Tags in Sidebar:", tags);
   const allTags = tags.map(tag => tag.name).sort();
-  console.log("allTags:", allTags);
 
   // フィルタリング
   const filteredNotes = notes.filter((note) => {

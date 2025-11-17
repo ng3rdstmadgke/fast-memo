@@ -29,7 +29,6 @@ export function NoteDetail({ note, refreshSidebar, onDelete }: NoteDetailProps) 
 
   const handleUpdate = useDebouncedCallback((value) => {
     if (!note) return;
-    console.log("Updating note:", {noteId: note.id, title, tags, content});
     updateNote(note.id, title, tags, content);
     // サイドバーの情報も更新
     refreshSidebar();
