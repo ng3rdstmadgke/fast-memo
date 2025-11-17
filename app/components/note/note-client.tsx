@@ -3,7 +3,7 @@
 import { Sidebar } from "@/components/note/sidebar";
 import { NoteDetail } from "@/components/note/note-detail";
 import { useEffect, useState } from "react";
-import { ListNotesSchema, ListTagsSchema, GetNoteByIdSchema, getNoteById } from "@/actions/main";
+import { ListNotesSchema, ListTagsSchema, GetNoteByIdSchema, getNoteById, listNotes, listTags } from "@/actions/main";
 
 type Note = {
   id: string;
@@ -12,10 +12,11 @@ type Note = {
   tags: string[];
 }
 
-export default function NotesPage({notesFromDB, tagsFromDB}: {notesFromDB: ListNotesSchema[], tagsFromDB: ListTagsSchema[]}) {
-  const [notes, setNotes] = useState(notesFromDB);
+export default function NotesPage({notesFromServer, tagsFromServer}: {notesFromServer: ListNotesSchema[], tagsFromServer: ListTagsSchema[]}) {
+  const [notes, setNotes] = useState(notesFromServer);
+  const [tags, setTags] = useState(tagsFromServer);
   const [selectedNoteId, setSelectedNoteId] = useState<string | undefined>(
-    notesFromDB[0]?.id
+    notesFromServer[0]?.id
   );
   const [selectedNoteDetail, setSelectedNoteDetail] = useState<GetNoteByIdSchema | null>(null); 
   const [isLoading, setIsLoading] = useState(false);
@@ -68,6 +69,14 @@ export default function NotesPage({notesFromDB, tagsFromDB}: {notesFromDB: ListN
     }
   };
 
+  // サイドバーの情報の更新
+  const refreshSidebar = async () => {
+    const updatedNotes = await listNotes();
+    setNotes(updatedNotes);
+    const updatedTags = await listTags();
+    setTags(updatedTags);
+  }
+
   return (
     <>
       {/* Main Content */}
@@ -75,7 +84,7 @@ export default function NotesPage({notesFromDB, tagsFromDB}: {notesFromDB: ListN
         {/* Sidebar */}
         <Sidebar
           notes={notes}
-          tags={tagsFromDB}
+          tags={tags}
           selectedNoteId={selectedNoteId}
           onNoteSelect={setSelectedNoteId}
           onNewNote={handleNewNote}
@@ -84,6 +93,7 @@ export default function NotesPage({notesFromDB, tagsFromDB}: {notesFromDB: ListN
         {/* Main Panel */}
         <NoteDetail
           note={selectedNoteDetail}
+          refreshSidebar={refreshSidebar}
           onDelete={handleDeleteNote}
         />
       </div>

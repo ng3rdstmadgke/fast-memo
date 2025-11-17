@@ -10,10 +10,11 @@ import { useDebouncedCallback } from "use-debounce";
 
 interface NoteDetailProps {
   note: GetNoteByIdSchema | null;
+  refreshSidebar: () => Promise<void>;
   onDelete?: (noteId: string) => void;
 }
 
-export function NoteDetail({ note, onDelete }: NoteDetailProps) {
+export function NoteDetail({ note, refreshSidebar, onDelete }: NoteDetailProps) {
   const [title, setTitle] = useState<string>("");
   const [tags, setTags] = useState<string>("");
   const [content, setContent] = useState<string>("");
@@ -30,6 +31,8 @@ export function NoteDetail({ note, onDelete }: NoteDetailProps) {
     if (!note) return;
     console.log("Updating note:", {noteId: note.id, title, tags, content});
     updateNote(note.id, title, tags, content);
+    // サイドバーの情報も更新
+    refreshSidebar();
   }, 1000);
 
 

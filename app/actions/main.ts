@@ -22,7 +22,7 @@ export type GetNoteByIdSchema = Prisma.NoteGetPayload<{
 export async function listNotes(): Promise<ListNotesSchema[]> {
   // TODO: ログイン機能実装後にユーザーIDを動的に取得する
   const user = await prisma.user.findUnique({
-    where: { id: "keita.midorikawa"}
+    where: { id: "keita.midorikawa"},
   });
   if (!user) {
     throw new Error("User not found");
@@ -32,6 +32,7 @@ export async function listNotes(): Promise<ListNotesSchema[]> {
     where: { userId: user.id },
     include: { tags: true},
     omit: { content: true },  // contentを除外
+    orderBy: { createdAt: 'desc' },
   })
 }
 

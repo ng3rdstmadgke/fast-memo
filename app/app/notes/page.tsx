@@ -25,7 +25,7 @@ export default async function Page() {
       />
 
       {/* Main Content */}
-      <NotesPage notesFromDB={notes} tags={tags} />
+      <NotesPage notesFromServer={notes} tagsFromServer={tags} />
     </>
   );
 }
