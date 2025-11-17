@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Plus, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Search, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { ListNotesSchema, ListTagsSchema } from "@/actions/main";
 
@@ -13,6 +13,7 @@ interface SidebarProps {
   selectedNoteId?: string;
   onNoteSelect?: (noteId: string) => void;
   onNewNote?: () => void;
+  onDelete?: (noteId: string) => void;
 }
 
 export function Sidebar({
@@ -21,6 +22,7 @@ export function Sidebar({
   selectedNoteId,
   onNoteSelect,
   onNewNote,
+  onDelete,
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("All");
@@ -136,25 +138,28 @@ export function Sidebar({
             </div>
           ) : (
             filteredNotes.map((note) => (
-              <button
+              <div
                 key={note.id}
-                className={`group relative w-full px-4 py-3 rounded-lg text-left transition-colors ${
+                className={`group relative w-full px-4 py-3 rounded-lg transition-colors ${
                   selectedNoteId === note.id
-                    ? "bg-gray-100 border border-gray-200"
+                    ? "bg-gray-300 border border-gray-200"
                     : "bg-white hover:bg-gray-50 border border-transparent"
                 }`}
-                onClick={() => onNoteSelect?.(note.id)}
               >
-                <div className="flex flex-col gap-1">
-                  <div
-                    className={`font-medium text-sm line-clamp-1 ${
-                      selectedNoteId === note.id
-                        ? "text-gray-900"
-                        : "text-gray-700"
-                    }`}
-                  >
-                    {note.title || "無題のノート"}
-                  </div>
+                <button
+                  className="w-full text-left"
+                  onClick={() => onNoteSelect?.(note.id)}
+                >
+                  <div className="flex flex-col gap-1 pr-8">
+                    <div
+                      className={`font-medium text-sm line-clamp-1 ${
+                        selectedNoteId === note.id
+                          ? "text-gray-900"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      {note.title || "無題のノート"}
+                    </div>
                   <div className="text-gray-400 text-xs">
                     {new Date(note.createdAt).toLocaleString("ja-JP", {
                       year: "numeric",
@@ -176,8 +181,21 @@ export function Sidebar({
                       ))}
                     </div>
                   )}
-                </div>
-              </button>
+                  </div>
+                </button>
+                {/* Delete Button */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete?.(note.id);
+                  }}
+                  className="absolute top-3 right-2 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             ))
           )}
         </div>

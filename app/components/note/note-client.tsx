@@ -78,6 +78,7 @@ export default function NotesPage({notesFromServer, tagsFromServer}: {notesFromS
           selectedNoteId={selectedNoteId}
           onNoteSelect={setSelectedNoteId}
           onNewNote={handleNewNote}
+          onDelete={handleDeleteNote}
         />
 
         {/* Main Panel */}
