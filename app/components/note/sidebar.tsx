@@ -123,7 +123,15 @@ export function Sidebar({
                   >
                     {note.title || "無題のノート"}
                   </div>
-                  <div className="text-gray-400 text-xs">{note.date}</div>
+                  <div className="text-gray-400 text-xs">
+                    {new Date(note.createdAt).toLocaleString("ja-JP", {
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                      hour: "2-digit",
+                      minute: "2-digit"
+                    })}
+                  </div>
                   {note.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-1">
                       {note.tags.map((tag) => (
