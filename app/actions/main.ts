@@ -2,6 +2,8 @@
 
 import { prisma } from '@/lib/prisma';
 import { Note, Tag, Prisma } from '@/lib/generated/prisma/client';
+import { auth } from '@/auth';
+import { get } from 'http';
 
 export type ListNotesSchema = Prisma.NoteGetPayload<{
   include: { tags: true },
@@ -19,14 +21,34 @@ export type GetNoteByIdSchema = Prisma.NoteGetPayload<{
   include: { tags: true },
 }>
 
-export async function listNotes(): Promise<ListNotesSchema[]> {
-  // TODO: ログイン機能実装後にユーザーIDを動的に取得する
-  const user = await prisma.user.findUnique({
-    where: { id: "keita.midorikawa"},
+
+async function getOrCreateUser(): Promise<{id: string}> {
+  const session = await auth();
+  if (!session || !session.user?.email) {
+    throw new Error("User not authenticated");
+  }
+
+  // ユーザーが存在しない場合は作成
+  let user = await prisma.user.findUnique({
+    where: { id: session.user.email },
   });
   if (!user) {
-    throw new Error("User not found");
+    user = await prisma.user.create({
+      data: {
+        id: session.user.email,
+        name: session.user.name || session.user.email.replace(/@.*/, ""),
+        email: session.user.email,
+      },
+    });
   }
+  return user
+}
+
+
+
+
+export async function listNotes(): Promise<ListNotesSchema[]> {
+  const user = await getOrCreateUser();
 
   return await prisma.note.findMany({
     where: { userId: user.id },
@@ -37,13 +59,8 @@ export async function listNotes(): Promise<ListNotesSchema[]> {
 }
 
 export async function listTags(): Promise<ListTagsSchema[]> {
-  // TODO: ログイン機能実装後にユーザーIDを動的に取得する
-  const user = await prisma.user.findUnique({
-    where: { id: "keita.midorikawa"}
-  });
-  if (!user) {
-    throw new Error("User not found");
-  }
+  const user = await getOrCreateUser();
+
   return await prisma.tag.findMany({
     where: { userId: user.id },
     select: {
@@ -54,13 +71,7 @@ export async function listTags(): Promise<ListTagsSchema[]> {
 }
 
 export async function getNoteById(noteId: string): Promise<GetNoteByIdSchema | null> {
-  // TODO: ログイン機能実装後にユーザーIDを動的に取得する
-  const user = await prisma.user.findUnique({
-    where: { id: "keita.midorikawa"}
-  });
-  if (!user) {
-    throw new Error("User not found");
-  }
+  const user = await getOrCreateUser();
 
   return await prisma.note.findUnique({
     where: {userId: user.id, id: noteId},
@@ -69,13 +80,7 @@ export async function getNoteById(noteId: string): Promise<GetNoteByIdSchema | n
 }
 
 export async function createNote(): Promise<{id: string}> {
-  // TODO: ログイン機能実装後にユーザーIDを動的に取得する
-  const user = await prisma.user.findUnique({
-    where: { id: "keita.midorikawa"}
-  });
-  if (!user) {
-    throw new Error("User not found");
-  }
+  const user = await getOrCreateUser();
 
   return await prisma.note.create({
     data: {
@@ -100,14 +105,7 @@ async function deleteOrphanTags(userId: string): Promise<void> {
 }
 
 export async function updateNote(noteId: string, title: string, tags: string, content: string): Promise<void> {
-  // TODO: ログイン機能実装後にユーザーIDを動的に取得する
-  const user = await prisma.user.findUnique({
-    where: { id: "keita.midorikawa"}
-  });
-
-  if (!user) {
-    throw new Error("User not found");
-  }
+  const user = await getOrCreateUser();
 
   const tagList = tags.split(",").map(tag => tag.trim()).filter(tag => tag !== "");
   await prisma.note.update({
@@ -140,14 +138,7 @@ export async function updateNote(noteId: string, title: string, tags: string, co
 }
 
 export async function deleteNote(noteId: string): Promise<void> {
-  // TODO: ログイン機能実装後にユーザーIDを動的に取得する
-  const user = await prisma.user.findUnique({
-    where: { id: "keita.midorikawa"}
-  });
-
-  if (!user) {
-    throw new Error("User not found");
-  }
+  const user = await getOrCreateUser();
 
   // https://www.prisma.io/docs/orm/prisma-client/queries/crud#delete
   await prisma.note.delete({
