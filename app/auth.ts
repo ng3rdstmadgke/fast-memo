@@ -19,4 +19,5 @@ const config = {
   ]
 } satisfies NextAuthConfig
 
+// NextAuthResult: https://authjs.dev/reference/nextjs#nextauthresult
 export const { handlers, signIn, signOut, auth } = NextAuth(config)
