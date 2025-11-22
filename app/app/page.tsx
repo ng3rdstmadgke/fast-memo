@@ -1,31 +1,12 @@
-import { Button } from "@/components/ui/button";
-import { Header } from "@/components/layout/header";
-import { listUsers } from "@/actions/sample";
+import { auth } from "@/auth"
+import { redirect } from "next/navigation"
 
 export default async function Home() {
-  let users = await listUsers();
-  return (
-    <>
-      {/* Header */}
-      <Header />
+  const session = await auth()
 
-      {/* Main Content */}
-      <div className="flex flex-1 items-center justify-center bg-gray-50">
-        <div className="text-center space-y-6">
-          <div className="space-y-2">
-            <div>{users.length}</div>
-            <h2 className="text-3xl font-semibold text-gray-900">
-              Fast Note へようこそ
-            </h2>
-            <p className="text-gray-600">
-              作業記録を効率的に管理するノートアプリケーション
-            </p>
-          </div>
-          <Button className="bg-gray-900 hover:bg-gray-800">
-            ログインして始める
-          </Button>
-        </div>
-      </div>
-    </>
-  );
+  if (session) {
+    redirect("/notes")
+  } else {
+    redirect("/login")
+  }
 }

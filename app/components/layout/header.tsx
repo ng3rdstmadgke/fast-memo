@@ -8,25 +8,20 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { LogOut, User } from "lucide-react";
+import { auth, signOut } from "@/auth";
 
-interface HeaderProps {
-  user?: {
-    name?: string | null;
-    email?: string | null;
-  } | null;
-  onLogout?: () => void;
-}
+export async function Header() {
+  const session = await auth();
 
-export function Header({ user, onLogout }: HeaderProps) {
-  const userInitials = user?.name
-    ? user.name
+  const userInitials = session?.user?.name
+    ? session.user.name
         .split(" ")
         .map((n) => n[0])
         .join("")
         .toUpperCase()
         .slice(0, 2)
-    : user?.email?.[0]?.toUpperCase() || "U";
+    : session?.user?.email?.[0]?.toUpperCase() || "U";
+
 
   return (
     <header className="border-b border-gray-200 bg-white">
@@ -35,13 +30,10 @@ export function Header({ user, onLogout }: HeaderProps) {
         <h1 className="text-xl font-semibold text-gray-900">Fast Note</h1>
 
         {/* User Dropdown */}
-        {user && (
+        {session && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="relative h-9 w-9 rounded-full p-0"
-              >
+              <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0" >
                 <Avatar className="h-9 w-9">
                   <AvatarFallback className="bg-gray-900 text-white text-sm">
                     {userInitials}
@@ -49,33 +41,36 @@ export function Header({ user, onLogout }: HeaderProps) {
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
+
+            {/* ドロップダウンメニュー */}
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col space-y-1">
-                  {user.name && (
-                    <p className="text-sm font-medium leading-none">
-                      {user.name}
-                    </p>
-                  )}
-                  {user.email && (
-                    <p className="text-xs leading-none text-gray-500">
-                      {user.email}
-                    </p>
-                  )}
+                  <p className="text-sm font-medium leading-none">
+                    {session.user?.name}
+                  </p>
+                  <p className="text-xs leading-none text-gray-500">
+                    {session.user?.email}
+                  </p>
                 </div>
               </DropdownMenuLabel>
+
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
-                <User className="mr-2 h-4 w-4" />
-                <span>プロフィール</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
+
               <DropdownMenuItem
                 className="text-red-600 focus:text-red-600"
-                onClick={onLogout}
               >
-                <LogOut className="mr-2 h-4 w-4" />
-                <span>ログアウト</span>
+                <form
+                  action={async () => {
+                    "use server";
+                    await signOut({ redirectTo: "/login" });
+                  }}
+                >
+                  <Button type="submit" variant="ghost" className="w-full p-0 m-0 text-left">
+                    <span>ログアウト</span>
+                  </Button>
+                </form>
+
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

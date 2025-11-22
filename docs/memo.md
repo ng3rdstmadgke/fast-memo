@@ -65,6 +65,7 @@ https://ui.shadcn.com/docs/components-json
 # Prisma & Client
 pnpm add -D prisma
 pnpm add @prisma/client
+# プロジェクトルートの .env を読み込むため (Next.js は自動的に読み込むが、Prisma は読み込まない)
 npm add -D dotenv
 
 # 初期化（datasource を postgresql に）
@@ -279,6 +280,103 @@ pnpm seed
 pnpm i use-debounce
 ```
 
+## サンプル
+
+`app/components/note/note-detail.tsx`
+
+```tsx
+"use client";
+//...
+import { useDebouncedCallback } from "use-debounce";
+
+export function NoteDetail({ note, refreshSidebar, onDelete }: NoteDetailProps) {
+
+  //...
+
+  const handleUpdate = useDebouncedCallback((value) => {
+    if (!note) return;
+    updateNote(note.id, title, tags, content);
+    // サイドバーの情報も更新
+    refreshSidebar();
+  }, 1000);
+
+  // ...
+
+  return (
+    <div className="flex-1 bg-white flex flex-col">
+      <div className="flex flex-col h-full p-6 space-y-4">
+        {/* Title and Delete Button */}
+        <div className="flex items-center gap-4">
+          <label className="text-sm font-medium text-gray-700 whitespace-nowrap w-16">
+            タイトル
+          </label>
+          <Input
+            type="text"
+            placeholder="タイトルを入力..."
+            className="flex-1 text-lg font-medium border-gray-200 focus:border-gray-300"
+            value={title}
+            onChange={
+              (e) => {
+                setTitle(e.target.value);
+                handleUpdate(e.target.value);
+              }
+            }
+            //onBlur={handleUpdate}
+          />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-gray-400 hover:text-red-600 hover:bg-red-50"
+            onClick={() => note && onDelete?.(note.id)}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+
+        {/* Tags */}
+        <div className="flex items-center gap-4">
+          <label className="text-sm font-medium text-gray-700 whitespace-nowrap w-16">
+            タグ
+          </label>
+          <Input
+            type="text"
+            placeholder="タグをカンマ区切りで入力 (例: 仕事, アイデア)"
+            className="flex-1 border-gray-200 focus:border-gray-300"
+            value={tags}
+            onChange={
+              (e) => {
+                setTags(e.target.value);
+                handleUpdate(e.target.value);
+              }
+            }
+            //onBlur={handleUpdate}
+          />
+        </div>
+
+        {/* Content */}
+        <Textarea
+          placeholder="ノートの内容を入力..."
+          className="flex-1 resize-none border-gray-200 focus:border-gray-300 min-h-0"
+          value={content}
+          onChange={
+            (e) => {
+              setContent(e.target.value);
+              handleUpdate(e.target.value);
+            }
+          }
+          //onBlur={handleUpdate}
+        />
+
+        {/* Created Date */}
+        <div className="text-xs text-gray-400">
+          作成日時: {new Date(note.createdAt).toLocaleString("ja-JP")}
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
 
 
 # Prisma のクエリメモ
@@ -343,4 +441,185 @@ const usersWithZeroPosts = await prisma.user.findMany({
     posts: true,
   },
 })
+```
+
+# 認証・認可
+
+- [Auth.js](https://authjs.dev/reference/nextjs)
+
+## Auth.js インストール
+
+```bash
+pnpm i next-auth@beta
+
+touch auth.config.ts
+```
+
+## 環境変数設定
+
+`.env`
+
+```
+AUTH_SECRET=your-generated-secret-key
+AUTH_KEYCLOAK_ID=your-client-id
+AUTH_KEYCLOAK_SECRET=your-client-secret
+AUTH_KEYCLOAK_ISSUER=https://keycloak.prd.baseport.net/realms/<REALM_NAME>
+```
+
+`AUTH_SECRET` は以下で生成できます。
+
+```bash
+openssl rand -base64 32
+```
+
+## Auth.js 設定ファイル
+
+`auth.ts`
+
+```ts
+import NextAuth from "next-auth"
+import Keycloak from "next-auth/providers/keycloak"
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  providers: [
+    Keycloak({
+      clientId: process.env.AUTH_KEYCLOAK_ID!,
+      clientSecret: process.env.AUTH_KEYCLOAK_SECRET!,
+      issuer: process.env.AUTH_KEYCLOAK_ISSUER!,
+    }),
+  ],
+  pages: {
+    signIn: '/login',  // カスタムログインページ
+  },
+})
+```
+
+## APIルートハンドラーの作成
+
+`app/api/auth/[...nextauth]/route.ts`
+
+```ts
+import { handlers } from "@/auth"
+
+export const { GET, POST } = handlers
+```
+
+## カスタムログインページの作成
+
+`app/login/page.tsx`
+
+```tsx
+// ...
+import { signIn } from "@/auth";
+
+export default async function Home() {
+  return (
+    <>
+      {/* ... */}
+      <div className="flex flex-1 items-center justify-center bg-gray-50">
+        <div className="text-center space-y-6">
+          {/* ... */}
+          <form
+            action={async () => {
+              "use server";
+              await signIn("keycloak", {redirectTo: "/notes"});
+            }}
+          >
+            <Button 
+              type="submit"
+              className="bg-gray-900 hover:bg-gray-800">
+              ログインして始める
+            </Button>
+          </form>
+        </div>
+      </div>
+    </>
+  );
+}
+```
+
+## セッション管理用ミドルウェアの作成
+
+`app/middleware.ts`
+
+```ts
+export { auth as middleware } from "@/auth"
+
+export const config = {
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+}
+```
+
+##  保護されたページでのセッション使用例
+
+```tsx
+import { auth } from "@/auth"
+import { redirect } from "next/navigation"
+
+export default async function ProtectedPage() {
+  const session = await auth()
+  
+  if (!session) {
+    redirect("/login")
+  }
+
+  return (
+    <div>
+      <h1>保護されたページ</h1>
+      <p>ようこそ、{session.user?.name}さん</p>
+    </div>
+  )
+}
+```
+
+## ログアウト処理の例
+
+`app/components/layout/header.tsx`
+
+```tsx
+// ...
+import { auth, signOut } from "@/auth";
+
+export async function Header() {
+  const session = await auth();
+
+  // ...
+
+  return (
+    <header className="border-b border-gray-200 bg-white">
+      <div className="flex items-center justify-between px-6 py-2.5">
+            {/* ... */}
+
+        {session && (
+          <DropdownMenu>
+
+            {/* ... */}
+
+            <DropdownMenuContent align="end" className="w-56">
+            
+              {/* ... */}
+
+              <DropdownMenuItem
+                className="text-red-600 focus:text-red-600"
+              >
+                <form
+                  action={async () => {
+                    "use server";
+                    await signOut({ redirectTo: "/login" });
+                  }}
+                >
+                  <Button type="submit" variant="ghost" className="w-full p-0 m-0 text-left">
+                    <span>ログアウト</span>
+                  </Button>
+                </form>
+
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+    </header>
+  );
+}
+
 ```
